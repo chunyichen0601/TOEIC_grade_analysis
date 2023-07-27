@@ -1,0 +1,673 @@
+---
+title: "TOEIC Grade"
+author: "CHUNYI"
+date: "2022-12-16"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r, label = library, include = FALSE, echo = FALSE, results = 'hide', warning = FALSE, message = FALSE}
+library(tidyverse)
+library(dplyr)
+library(agricolae)
+library(ggpubr)
+library(forcats)
+library(stats)
+setwd("D:/NTPU/110_2_Meeting/Project_toeic_code/")
+```
+
+```{r,  label = data}
+Data <- read.csv("TOEIC_DATA.csv")
+Data$class <- Data$class %>% as.factor()
+```
+
+
+# Q1 不同菁英班學生在多益前測、出席率、學期成績及多益後測上的差異情形
+
+## Q1.1 不同菁英班學生多益 **多益前測** 之差異
+```{r, label = Q1_data_pre}
+model_q1_Pre <- aov(Pre_total_grade ~ class, data = Data)
+summary(model_q1_Pre)
+```
+
+```{r}
+model_q1_Pre_lsd <- LSD.test(model_q1_Pre , "class")
+print(model_q1_Pre_lsd)
+ggplot(Data, aes(class %>% ordered(model_q1_Pre_lsd$groups %>% row.names()), 
+                                   y = Pre_total_grade)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    ylab("Previous total grade") +
+    stat_summary(geom = 'text', 
+                 label = model_q1_Pre_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+## Q1.2 不同菁英班學生多益 **出席率** 之差異
+```{r, label = Q1_data_att}
+model_q1_att <- aov(att_rate ~ class, data = Data)
+summary(model_q1_att)
+```
+
+```{r}
+model_q1_att_lsd <- LSD.test(model_q1_att , "class")
+print(model_q1_att_lsd)
+ggplot(Data, aes(class %>% ordered(model_q1_att_lsd$groups %>% row.names()),
+                 y = att_rate)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    ylab("Attendance rate") +
+    stat_summary(geom = 'text', 
+                 label = model_q1_att_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+
+## Q1.3 不同菁英班學生多益 **學期成績** 之差異
+```{r, label = Q1_data_sem}
+model_q1_Sem <- aov(Semester_grade ~ class, data = Data)
+summary(model_q1_Sem)
+```
+
+```{r}
+model_q1_Sem_lsd <- LSD.test(model_q1_Sem , "class")
+print(model_q1_Sem_lsd)
+
+ggplot(Data, aes(class %>% ordered(model_q1_Sem_lsd$groups %>% row.names()),
+                 y = Semester_grade)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    ylab("Semester grade") +
+    stat_summary(geom = 'text', 
+                 label = model_q1_Sem_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+
+## Q1.4 不同菁英班學生多益 **多益後測** 之差異
+```{r, label = Q1_data_post}
+model_q1_Post <- aov(Post_total_grade ~ class, data = Data)
+summary(model_q1_Post)
+```
+
+```{r}
+model_q1_Post_lsd <- LSD.test(model_q1_Post , "class")
+print(model_q1_Post_lsd)
+ggplot(Data, aes(class %>% ordered(model_q1_Post_lsd$groups %>% row.names()), 
+                                   y = Pre_total_grade)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    ylab("Post total grade") +
+    stat_summary(geom = 'text', 
+                 label = model_q1_Post_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+# Q2 多益前測成績與多益後測成績的關聯性（聽力/閱讀/總分 需分開做）
+```{r}
+data_Q2 <- Data %>% select(att_rate,
+                           Pre_listing_grade,
+                           Pre_reading_grade,
+                           Pre_total_grade,
+                           Post_listing_grade,
+                           Post_reading_grade,
+                           Post_total_grade,
+                           Semester_grade,
+                           class)
+
+data_Q2 <- data_Q2 %>% na.omit()
+print(dim(data_Q2))
+
+pairs(data_Q2)
+```
+
+```{r, label = Q2_cor}
+cor_listing <- cor(data_Q2$Pre_listing_grade, 
+                   data_Q2$Post_listing_grade) %>% round(4)
+cor.test(data_Q2$Pre_listing_grade, 
+         data_Q2$Post_listing_grade, 
+         method="pearson")
+
+cor_reading <- cor(data_Q2$Pre_reading_grade, 
+                   data_Q2$Post_reading_grade)%>% round(4)
+cor.test(data_Q2$Pre_reading_grade, 
+         data_Q2$Post_reading_grade,
+         method="pearson")
+
+cor_total <- cor(data_Q2$Pre_total_grade, 
+                 data_Q2$Post_total_grade)%>% round(4)
+cor.test(data_Q2$Pre_total_grade, 
+         data_Q2$Post_total_grade,
+         method="pearson")
+```
+
+```{r}
+par(pty = "s")
+plot(data_Q2$Pre_listing_grade, data_Q2$Post_listing_grade,
+     main = paste("Listing grade", "(Pearson correlation:", cor_listing, ")"),
+     xlab = "Pre-testing", ylab = "Post-testing")
+
+plot(data_Q2$Pre_reading_grade, data_Q2$Post_reading_grade,
+     main = paste("Reading grade", "(Pearson correlation:", cor_reading, ")"),
+     xlab = "Pre-testing", ylab = "Post-testing")
+
+plot(data_Q2$Pre_total_grade, data_Q2$Post_total_grade,
+     main = paste("Total grade", "(Pearson correlation:", cor_total, ")"),
+     xlab = "Pre-testing", ylab = "Post-testing")
+```
+
+
+## Q2.1 多益前測成績可以多少程度預測多益後測成績？不同班是否有差異？
+### Q2.1.1 多益前測成績可以多少程度預測多益後測成績？
+```{r}
+lm_fit_listing <- lm(Post_listing_grade ~ Pre_listing_grade, data = data_Q2)
+summary(lm_fit_listing)
+
+lm_fit_reading <- lm(Post_reading_grade ~ Pre_reading_grade, data = data_Q2)
+summary(lm_fit_reading)
+
+lm_fit_total <- lm(Post_total_grade ~ Pre_total_grade, data = data_Q2)
+summary(lm_fit_total)
+```
+
+### Q2.1.2 不同班的成績預測上是否有差異
+```{r}
+data_Q2$class_1 <- ifelse(data_Q2$class == "1", 1, 0)
+data_Q2$class_2 <- ifelse(data_Q2$class == "2", 1, 0)
+data_Q2$class_3 <- ifelse(data_Q2$class == "3", 1, 0)
+data_Q2$class_4 <- ifelse(data_Q2$class == "4", 1, 0)
+```
+
+```{r}
+lm_fit_listing_class <- lm(Post_listing_grade ~ Pre_listing_grade + 
+                             class_1 + 
+                             class_2 + 
+                             class_3 + 
+                             Pre_listing_grade*class_1 + 
+                             Pre_listing_grade*class_2 +
+                             Pre_listing_grade*class_3 , 
+                           data = data_Q2)
+summary(lm_fit_listing_class)
+
+lm_fit_reading_class <- lm(Post_reading_grade ~ Pre_reading_grade + 
+                             class_1 + 
+                             class_2 + 
+                             class_3 + 
+                             Pre_reading_grade*class_1 + 
+                             Pre_reading_grade*class_2 +
+                             Pre_reading_grade*class_3, data = data_Q2)
+summary(lm_fit_reading_class)
+
+lm_fit_Total_class <- lm(Post_total_grade ~ Pre_total_grade + 
+                           class_1 + 
+                           class_2 + 
+                           class_3 +
+                           Pre_total_grade*class_1 + 
+                           Pre_total_grade*class_2 +
+                           Pre_total_grade*class_3, data = data_Q2)
+summary(lm_fit_Total_class)
+```
+
+```{r}
+ggplot(Data, aes(x = Pre_listing_grade, 
+                 y = Post_listing_grade, 
+                 color = class)) +
+  geom_point() +
+  ggtitle("Listing grade group by class")
+
+ggplot(Data, aes(x = Pre_reading_grade, 
+                 y = Post_reading_grade, 
+                 color = class)) +
+  geom_point() +
+  ggtitle("Reading grade group by class")
+
+ggplot(Data, aes(x = Pre_total_grade, 
+                 y = Post_total_grade, 
+                 color = class)) +
+  geom_point() +
+  ggtitle("Total grade group by class")
+```
+
+## Q2.2 多益後測成績是否會受到出席率或學期成績的影響？
+```{r}
+lm_fit_listing_2 <- lm(Post_listing_grade ~ att_rate + Semester_grade, 
+                       data = data_Q2)
+summary(lm_fit_listing_2)
+
+lm_fit_reading_2 <- lm(Post_reading_grade ~ att_rate + Semester_grade, 
+                       data = data_Q2)
+summary(lm_fit_reading_2)
+
+lm_fit_total_2 <- lm(Post_total_grade ~ att_rate + Semester_grade,
+                     data = data_Q2)
+summary(lm_fit_total_2)
+```
+
+
+# Q3 不同菁英班學生在「期末調查問卷」的整體反應差異
+```{r}
+data_Q3 <- read.csv("Q3_data.csv")
+```
+
+## Q3.1 差異性（感到恐懼的人對於教學、課程內容滿意度、英檢加強班、出國留學有無顯著低於感到期待的人？）
+```{r}
+data_Q3$part1_feel <- ifelse(data_Q3$part1_x1 < data_Q3$part1_x2, 
+                             "fear",
+                             ifelse(data_Q3$part1_x1 > data_Q3$part1_x2,
+                                    "exciting", "blance")) %>% 
+  factor(levels = c("fear", "blance", "exciting"))
+
+data_Q3$class <- data_Q3$college %>% as.factor()
+levels(data_Q3$class) <- c("1", "2", "3", "4", "4")
+
+Q3_data_diff <- subset(data_Q3, part1_feel != "blance")
+
+print(paste("number of fear:",
+            length(which(data_Q3$part1_feel == "fear"))))
+print(paste("number of exciting:",
+            length(which(data_Q3$part1_feel == "exciting"))))
+print(paste("number of blance:",
+            length(which(data_Q3$part1_feel == "blance"))))
+```
+- 我在大一菁英班課程開始前，感到很期待
+```{r}
+model_q3_feel <- aov(part1_x1 ~ class, data = data_Q3)
+summary(model_q3_feel)
+chisq.test(table(data_Q3$class, data_Q3$part1_x1))
+```
+
+```{r}
+model_q3_feel_lsd <- LSD.test(model_q3_feel, "class")
+print(model_q3_feel_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_feel_lsd$groups %>% row.names()), 
+                                   y = part1_x1)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_feel_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+
+```
+
+- 我在大一菁英班課程開始前，感到很恐懼
+```{r}
+model_q3_feel <- aov(part1_x2 ~ class, data = data_Q3)
+summary(model_q3_feel)
+chisq.test(table(data_Q3$class, data_Q3$part1_x2))
+```
+
+```{r}
+model_q3_feel_lsd <- LSD.test(model_q3_feel, "class")
+print(model_q3_feel_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_feel_lsd$groups %>% row.names()), 
+                                   y = part1_x2)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_feel_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+
+## Q3.1.1 教學
+### 我喜歡老師的教學方式
+```{r}
+fe <- subset(data_Q3, part1_feel == "fear") %>% select(part2_x1)
+ex <- subset(data_Q3, part1_feel == "exciting") %>% select(part2_x1)
+t.test(fe, ex,alternative = "less")
+chisq.test(table(data_Q3$part1_feel, data_Q3$part2_x1))
+```
+
+### 我覺得老師的授課內容符合我的需求
+```{r}
+fe <- subset(data_Q3, part1_feel == "fear") %>% select(part2_x2)
+ex <- subset(data_Q3, part1_feel == "exciting") %>% select(part2_x2)
+t.test(fe, ex,alternative = "less")
+chisq.test(table(data_Q3$part1_feel, data_Q3$part2_x2))
+```
+
+## Q3.1.2 課程內容滿意度
+### 整體而言，我認為從本次課程中學到很多
+```{r}
+fe <- subset(data_Q3, part1_feel == "fear") %>% select(part3_x1)
+ex <- subset(data_Q3, part1_feel == "exciting") %>% select(part3_x1)
+t.test(fe, ex,alternative = "less")
+chisq.test(table(data_Q3$part1_feel, data_Q3$part3_x1))
+```
+
+### 我覺得本次課程的難易度符合我的需求
+```{r}
+fe <- subset(data_Q3, part1_feel == "fear") %>% select(part3_x2)
+ex <- subset(data_Q3, part1_feel == "exciting") %>% select(part3_x2)
+t.test(fe, ex,alternative = "less")
+chisq.test(table(data_Q3$part1_feel, data_Q3$part3_x2))
+```
+
+### 我覺得本次課程給我的壓力很大
+```{r}
+fe <- subset(data_Q3, part1_feel == "fear") %>% select(part3_x3)
+ex <- subset(data_Q3, part1_feel == "exciting") %>% select(part3_x3)
+t.test(ex, fe, alternative = "less")
+chisq.test(table(data_Q3$part1_feel, data_Q3$part3_x3))
+```
+
+
+## Q3.1.3 英檢加強班
+### 我希望學校能多開設英檢加強班
+```{r}
+fe <- subset(data_Q3, part1_feel == "fear") %>% select(part5_x1)
+ex <- subset(data_Q3, part1_feel == "exciting") %>% select(part5_x1)
+t.test(fe, ex,alternative = "less")
+chisq.test(table(data_Q3$part1_feel, data_Q3$part5_x1))
+```
+
+### 我希望以後能繼續參加英文菁英班或英檢加強班等相關課程
+```{r}
+fe <- subset(data_Q3, part1_feel == "fear") %>% select(part5_x2)
+ex <- subset(data_Q3, part1_feel == "exciting") %>% select(part5_x2)
+t.test(fe, ex,alternative = "less")
+chisq.test(table(data_Q3$part1_feel, data_Q3$part5_x2))
+```
+
+
+
+## Q3.1.4 出國留學
+### 我希望在大學四年期間有機會能夠出國交換/研習/實習
+```{r}
+fe <- subset(data_Q3, part1_feel == "fear") %>% select(part6_x1)
+ex <- subset(data_Q3, part1_feel == "exciting") %>% select(part6_x1)
+t.test(fe, ex,alternative = "less")
+chisq.test(table(data_Q3$part1_feel, data_Q3$part6_x1))
+```
+
+
+## Q3.2 教學滿意度
+- 我喜歡老師的教學方式
+```{r}
+model_q3_edu <- aov(part2_x1 ~ class, data = data_Q3)
+summary(model_q3_edu)
+chisq.test(table(data_Q3$class, data_Q3$part2_x1))
+```
+
+```{r}
+model_q3_edu_lsd <- LSD.test(model_q3_edu, "class")
+print(model_q3_edu_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_edu_lsd$groups %>% row.names()), 
+                                   y = part2_x1)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_edu_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+- 我覺得老師的授課內容符合我的需求
+```{r}
+model_q3_edu <- aov(part2_x2 ~ class, data = data_Q3)
+summary(model_q3_edu)
+chisq.test(table(data_Q3$class, data_Q3$part2_x2))
+```
+
+```{r}
+model_q3_edu_lsd <- LSD.test(model_q3_edu, "class")
+print(model_q3_edu_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_edu_lsd$groups %>% row.names()), 
+                                   y = part2_x2)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_edu_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+
+## Q3.3 課程內容滿意度
+- 整體而言，我認為從本次課程中學到很多
+```{r}
+model_q3_3 <- aov(part3_x1 ~ class, data = data_Q3)
+summary(model_q3_3)
+chisq.test(table(data_Q3$class, data_Q3$part3_x1))
+```
+
+```{r}
+model_q3_3_lsd <- LSD.test(model_q3_3, "class")
+print(model_q3_3_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_3_lsd$groups %>% row.names()), 
+                                   y = part3_x1)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_3_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+- 我覺得本次課程的難易度符合我的需求
+```{r}
+model_q3_3 <- aov(part3_x2 ~ class, data = data_Q3)
+summary(model_q3_3)
+chisq.test(table(data_Q3$class, data_Q3$part3_x2))
+```
+
+```{r}
+model_q3_3_lsd <- LSD.test(model_q3_3, "class")
+print(model_q3_3_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_3_lsd$groups %>% row.names()), 
+                                   y = part3_x2)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_3_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+- 我覺得本次課程給我的壓力很大
+```{r}
+model_q3_3 <- aov(part3_x3 ~ class, data = data_Q3)
+summary(model_q3_3)
+chisq.test(table(data_Q3$class, data_Q3$part3_x3))
+```
+
+```{r}
+model_q3_3_lsd <- LSD.test(model_q3_3, "class")
+print(model_q3_3_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_3_lsd$groups %>% row.names()), 
+                                   y = part3_x3)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_3_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+## Q3.4 自信心
+- 參加本次課程使我的英文進步
+```{r}
+model_q3_conf <- aov(part4_x1 ~ class, data = data_Q3)
+summary(model_q3_conf)
+chisq.test(table(data_Q3$class, data_Q3$part4_x1))
+```
+
+```{r}
+model_q3_conf_lsd <- LSD.test(model_q3_conf, "class")
+print(model_q3_conf_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_conf_lsd$groups %>% row.names()), 
+                                   y = part4_x1)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_conf_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+- 參加本次課程後會想再挑戰考更高分
+```{r}
+model_q3_conf <- aov(part4_x2 ~ class, data = data_Q3)
+summary(model_q3_conf)
+chisq.test(table(data_Q3$class, data_Q3$part4_x2))
+```
+
+```{r}
+model_q3_conf_lsd <- LSD.test(model_q3_conf, "class")
+print(model_q3_conf_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_conf_lsd$groups %>% row.names()), 
+                                   y = part4_x2)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_conf_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+- 參加本次課程後增進了我對英文的學習動機與信心
+```{r}
+model_q3_conf <- aov(part4_x3 ~ class, data = data_Q3)
+summary(model_q3_conf)
+chisq.test(table(data_Q3$class, data_Q3$part4_x3))
+```
+
+```{r}
+model_q3_conf_lsd <- LSD.test(model_q3_conf, "class")
+print(model_q3_conf_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_conf_lsd$groups %>% row.names()), 
+                                   y = part4_x3)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_conf_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+
+
+## Q3.5 對於英檢加強班的態度
+- 我希望學校能多開設英檢加強班
+```{r}
+model_q3_Intensive <- aov(part5_x1 ~ class, data = data_Q3)
+summary(model_q3_Intensive)
+chisq.test(table(data_Q3$class, data_Q3$part5_x1))
+```
+
+```{r}
+model_q3_Intensive_lsd <- LSD.test(model_q3_Intensive, "class")
+print(model_q3_Intensive_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_Intensive_lsd$groups %>% row.names()), 
+                                   y = part5_x1)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_Intensive_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+- 我希望以後能繼續參加英文菁英班或英檢加強班等相關課程
+```{r}
+model_q3_Intensive <- aov(part5_x2 ~ class, data = data_Q3)
+summary(model_q3_Intensive)
+chisq.test(table(data_Q3$class, data_Q3$part5_x2))
+```
+
+```{r}
+model_q3_Intensive_lsd <- LSD.test(model_q3_Intensive, "class")
+print(model_q3_Intensive_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_Intensive_lsd$groups %>% row.names()), 
+                                   y = part5_x2)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_Intensive_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+- 如果以後有英文菁英班相關課程，我最想參加的類型是
+```{r}
+data_Q3$part5_x3_class <- data_Q3$part5_x3 %>% as.factor()
+class_level <- c("n", "a", "ac", "n", "b", "ab","abc", "abd", "abcd", "c", "n","d", "ad", "acd", "cd")
+levels(data_Q3$part5_x3_class) <- class_level
+
+part5_x3_table <- table(data_Q3$class,
+                        data_Q3$part5_x3_class %>% 
+                          ordered(c("n","a", "b","c","d", 
+                                    "ab","ac","ad","cd",
+                                    "abc","abd","acd","abcd")))
+(part5_x3_table)
+chisq.test(part5_x3_table)
+apply(part5_x3_table , 2, sum)
+```
+
+## Q3.6 對於出國留學的態度
+- 我希望在大學四年期間有機會能夠出國交換/研習/實習
+```{r}
+model_q3_exch <- aov(part6_x1 ~ class, data = data_Q3)
+summary(model_q3_exch)
+chisq.test(table(data_Q3$class, data_Q3$part6_x1))
+```
+
+```{r}
+model_q3_exch_lsd <- LSD.test(model_q3_exch, "class")
+print(model_q3_exch_lsd)
+ggplot(data_Q3, aes(class %>% ordered(model_q3_exch_lsd$groups %>% row.names()), 
+                                   y = part6_x1)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") +
+    stat_summary(geom = 'text', 
+                 label = model_q3_exch_lsd$groups[,2], 
+                 fun.y = max, size = 4, 
+                 vjust=0, hjust =-1, color ="darkblue")
+```
+
+- 我對於去哪些國家交換/研習/實習有興趣（請用逗點隔開）
+```{r}
+data_Q3_exch <- read.csv("Q3_exch.csv")
+data_Q3_exch_set <- data.frame(
+  country = data_Q3_exch,
+  class = data_Q3$class
+)
+
+chisq.test(table(data_Q3_exch_set$class,
+                 data_Q3_exch_set$country))
+apply(table(data_Q3_exch_set$country, 
+            data_Q3_exch_set$class), 1, sum)
+```
+
+## 排名檢測
+```{r}
+rank_data <- c(2.5, 2.5,   4,  4,  4,  4, 1.5, 4,   4,   4, 2.5, 2.5, 2.5,
+               2.5, 2.5, 2.5,  2,  2,  3, 1.5, 2, 1.5, 1.5, 2.5, 2.5, 2.5,
+               2.5, 2.5,   1,  2,  2,  1,   3, 2, 1.5, 1.5, 2.5, 2.5, 2.5,
+               2.5, 2.5, 2.5,  2,  2,  2,   4, 2,   3,   3, 2.5, 2.5, 2.5)
+
+trt <- c(rep(c("1", "2", "3", "4"), each = 13))
+block <- c(rep(c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"), 4))
+
+rank_fit <- friedman.test(rank_data, trt, block)
+summary(rank_fit)
+matrix(rank_data, 13, 4) %>% apply(2,mean)
+
+rank_dataset <- data.frame(
+  Data = rank_data,
+  Trt = trt,
+  Block = block
+)
+
+ggplot(rank_dataset, aes(x = Trt, y = Data)) + 
+    stat_boxplot(alpha=0.2) + 
+    xlab("class") + 
+    ylab("satisfaction ranking ")
+```
