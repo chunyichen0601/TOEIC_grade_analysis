@@ -14,7 +14,6 @@ library(agricolae)
 library(ggpubr)
 library(forcats)
 library(stats)
-setwd("D:/NTPU/110_2_Meeting/Project_toeic_code/")
 ```
 
 ```{r,  label = data}
