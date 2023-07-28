@@ -1,7 +1,7 @@
 # TOEIC grade analysis
 The data was obtained from the results of an elite English class at a university. The data has four elite courses and 204 students. This data did not provide because the data included basic student information. 
 
-_TOEIC Pre-test_
+_Mean of TOEIC Pre-test_
 | Class | listing grade | reading grade | total grade |
 | :---: | :-----------: | :-----------: | :---------: |
 |   A   | 223.2         | 145.1         | 368.0       |
@@ -9,7 +9,7 @@ _TOEIC Pre-test_
 |   C   | 186.0         | 132.1         | 318.1       |
 |   D   | 189.3         | 110.1         | 299.5       |
 
-_TOEIC Post-test_
+_Mean of TOEIC Post-test_
 | Class | listing grade | reading grade | total grade |
 | :---: | :-----------: | :-----------: | :---------: |
 |   A   | 212.3         | 158.2         | 370.5       |
@@ -17,7 +17,7 @@ _TOEIC Post-test_
 |   C   | 203.1         | 127.5         | 330.6       |
 |   D   | 209.8         | 122.4         | 332.3       |
 
-_Semester Grades_
+_Mean of Semester Grades_
 | Class | number  | attendent rate | Semester grade | Mid grade | Final grade |
 | :---: | :-----: | :------------: | :------------: | :-------: | :---------: |
 |   A   |  56     | 0.93           | 68.41          | 63.32     | 57.71       |
